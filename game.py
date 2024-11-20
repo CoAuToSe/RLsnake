@@ -24,7 +24,7 @@ BLEU = (0, 0, 255)
 
 # Taille du jeu
 TAILLE_BLOC = 20
-VITESSE = 40
+VITESSE = 1000
 
 class SnakeGameAI:
 

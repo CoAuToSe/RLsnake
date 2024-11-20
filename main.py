@@ -28,22 +28,26 @@ import matplotlib.pyplot as plt
 plt.ion()  # Active le mode interactif
 
 def plot(scores, mean_scores):
-    plt.figure(1)
-    plt.clf()
-    plt.title('Entraînement...')
-    plt.xlabel('Nombre de parties')
-    plt.ylabel('Score')
-    plt.plot(scores, label='Score')
-    plt.plot(mean_scores, label='Score Moyen')
-    plt.ylim(ymin=0)
-    plt.legend()
-    plt.draw()
-    plt.pause(0.1)
+    # fig = plt.figure(1)
+    # ax = plt.gca()
+    # ax.set_facecolor("xkcd:purple")
+    # fig.patch.set_facecolor("xkcd:grey")
+    # plt.clf()
+    # plt.title('Entraînement...')
+    # plt.xlabel('Nombre de parties')
+    # plt.ylabel('Score')
+    # plt.plot(scores, label='Score')
+    # plt.plot(mean_scores, label='Score Moyen')
+    # plt.ylim(ymin=0)
+    # plt.legend()
+    # plt.draw()
+    # plt.pause(0.1)
+    pass
     
-def save_scores(scores, mean_scores, file_name='scores.npz'):
+def save_scores(scores, mean_scores, file_name):
     np.savez(file_name, scores=scores, mean_scores=mean_scores)
 
-def load_scores(file_name='scores.npz'):
+def load_scores(file_name):
     if os.path.exists(file_name):
         data = np.load(file_name)
         return list(data['scores']), list(data['mean_scores'])
@@ -51,22 +55,33 @@ def load_scores(file_name='scores.npz'):
         return [], []
 
 
-def train():
+def train(model_type):
     # scores = []
     # mean_scores = []
     # total_score = 0
     # record = 0
+    agent = Agent(model_type)
+
+    # Sélection des noms de fichiers en fonction du modèle
+    if model_type == 'linear':
+        agent_model_file = 'linear_agent.pth'
+        score_file = 'linear_scores.npz'
+    elif model_type == 'lstm':
+        agent_model_file = 'lstm_agent.pth'
+        score_file = 'lstm_scores.npz'
+    else:
+        raise ValueError("Type de modèle non reconnu. Utilisez 'linear' ou 'lstm'.")
     
-    scores, mean_scores = load_scores()
+    scores, mean_scores = load_scores(agent_model_file)
     total_score = sum(scores)
     record = max(scores) if scores else 0
     
-    agent = Agent()
-    
+
     # Charger l'agent s'il existe un fichier de sauvegarde
-    if os.path.exists('agent.pth'):
-        agent.load('agent.pth')
-        print(f"Agent chargé avec succès. Nombre de parties précédentes : {agent.n_games}")
+    if os.path.exists(agent_model_file):
+        agent.load(agent_model_file)
+        print(f"Agent chargé avec succès depuis {agent_model_file}. Nombre de parties précédentes : {agent.n_games}")
+
 
     
     game = SnakeGameAI()
@@ -105,10 +120,10 @@ def train():
                         
                 if score > record:
                     record = score
-                    agent.save('agent_best.pth')  # Sauvegarder le meilleur modèle
+                    agent.save('best_'+agent_model_file)  # Sauvegarder le meilleur modèle
 
                 # Sauvegarder l'agent après chaque partie
-                agent.save('agent.pth')
+                agent.save(agent_model_file)
 
                 print('Partie', agent.n_games, 'Score', score, 'Record:', record)
 
@@ -117,14 +132,14 @@ def train():
                 mean_score = total_score / agent.n_games
                 mean_scores.append(mean_score)
                 plot(scores, mean_scores)
-                save_scores(scores, mean_scores)
+                save_scores(scores, mean_scores, score_file)
         # plt.ioff()
         # plt.show()
     except KeyboardInterrupt:
         print("Interruption détectée. Sauvegarde de l'agent...")
-        agent.save('agent_interupt.pth')
-        save_scores(scores, mean_scores)
+        agent.save('interupt_'+agent_model_file)
+        save_scores(scores, mean_scores, score_file)
         print("Agent sauvegardé. Fermeture du programme.")
     
 if __name__ == '__main__':
-    train()
+    train('lstm')
