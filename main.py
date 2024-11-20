@@ -71,18 +71,15 @@ def train(model_type):
         score_file = 'lstm_scores.npz'
     else:
         raise ValueError("Type de modèle non reconnu. Utilisez 'linear' ou 'lstm'.")
-    
-    scores, mean_scores = load_scores(agent_model_file)
-    total_score = sum(scores)
-    record = max(scores) if scores else 0
-    
 
     # Charger l'agent s'il existe un fichier de sauvegarde
     if os.path.exists(agent_model_file):
         agent.load(agent_model_file)
         print(f"Agent chargé avec succès depuis {agent_model_file}. Nombre de parties précédentes : {agent.n_games}")
 
-
+    scores, mean_scores = load_scores(score_file)
+    total_score = sum(scores)
+    record = max(scores) if scores else 0
     
     game = SnakeGameAI()
     try:
