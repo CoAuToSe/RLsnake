@@ -7,7 +7,7 @@ from game import SnakeGameAI, Direction, Point
 from model import LinQNet
 
 TAILLE_BLOC = 20
-MAX_MEMOIRE = 100_000
+MAX_MEMOIRE = 100_000_000
 TAILLE_BATCH = 1000
 LR = 0.001
 

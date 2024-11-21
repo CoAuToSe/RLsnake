@@ -8,12 +8,12 @@ from game import SnakeGameAI, Direction, Point, TAILLE_BLOC
 from model import LinQNet, LSTMNet  # Assurez-vous d'importer les deux modèles
 import torch.nn as nn
 
-MAX_MEMOIRE = 100_000
+MAX_MEMOIRE = 100_000_000
 TAILLE_BATCH = 1000
 LR = 0.001
 
 class Agent:
-    def __init__(self, model_type):
+    def __init__(self, model_type, args):
         self.n_games = 0
         self.epsilon = 0  # Paramètre pour l'exploration
         self.gamma = 0.9  # Facteur de discount
@@ -26,7 +26,7 @@ class Agent:
             self.model_file = 'linear_model.pth'
             self.agent_file = 'linear_agent.pth'
         elif self.model_type == 'lstm':
-            self.sequence_length = 5  # Longueur de la séquence pour LSTM
+            self.sequence_length = args[0]  # Longueur de la séquence pour LSTM
             self.state_memory = deque(maxlen=self.sequence_length)
             self.model = LSTMNet(11, 256, 3)
             self.model_file = 'lstm_model.pth'
@@ -182,9 +182,9 @@ class Agent:
         else:
             raise ValueError("Type de modèle non reconnu.")
 
-    def get_action(self, état):
+    def get_action(self, état, score):
         # Stratégie d'exploration vs exploitation
-        self.epsilon = max(0.01, 0.1 - (self.n_games * 0.001))
+        self.epsilon = max(0.01, 0.1 - (self.n_games * 0.001))/(1+score)
         final_move = [0, 0, 0]
         if random.random() < self.epsilon:
             move = random.randint(0, 2)

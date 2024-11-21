@@ -47,6 +47,7 @@ class SnakeGameAI:
         self.score = 0
         self.nourriture = None
         self._place_nourriture()
+        self.cumulative_reward = 0
         self.frame_iteration = 0
 
     def _place_nourriture(self):
@@ -69,17 +70,22 @@ class SnakeGameAI:
         self.serpent.insert(0, self.tête)
 
         # 3. Vérifier la collision
-        reward = -0.01
+        # reward = 0
+        # if self.score>0:
+        #     reward = -0.001
+        #     # reward = -0.001*(abs(self.nourriture.x-self.tête.x)/TAILLE_BLOC+abs(self.nourriture.y-self.tête.y)/TAILLE_BLOC - 10)
+        
+        reward = -0.001
         game_over = False
         if self._collision() or self.frame_iteration > 100 * len(self.serpent):
             game_over = True
-            reward = -10
+            reward += -10
             return reward, game_over, self.score
 
         # 4. Vérifier si le serpent a mangé la nourriture
         if self.tête == self.nourriture:
             self.score += 1
-            reward = 20
+            reward += 20
             self._place_nourriture()
         else:
             self.serpent.pop()
@@ -88,6 +94,7 @@ class SnakeGameAI:
         self._update_ui()
         self.clock.tick(VITESSE)
 
+        self.cumulative_reward += reward
         # 6. Retourner le jeu_over et le score
         return reward, game_over, self.score
 

@@ -46,3 +46,26 @@ class LSTMNet(nn.Module):
 
     def load(self, file_name='lstm_model.pth'):
         self.load_state_dict(torch.load(file_name))
+        
+class PPOModel(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(PPOModel, self).__init__()
+        # Couche commune
+        self.fc_common = nn.Linear(input_size, hidden_size)
+        # Tête de la politique (acteur)
+        self.fc_policy = nn.Linear(hidden_size, output_size)
+        # Tête de la valeur (critique)
+        self.fc_value = nn.Linear(hidden_size, 1)
+
+    def forward(self, x):
+        x = F.relu(self.fc_common(x))
+        policy_logits = self.fc_policy(x)
+        value = self.fc_value(x)
+        return policy_logits, value
+    
+    
+    def save(self, file_name='ppo_model.pth'):
+        torch.save(self.state_dict(), file_name)
+
+    def load(self, file_name='ppo_model.pth'):
+        self.load_state_dict(torch.load(file_name))
