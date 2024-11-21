@@ -55,6 +55,7 @@ class Agent:
             return np.array(sequence, dtype=int)
         else:
             raise ValueError("Type de modèle non reconnu.")
+    
 
     def _get_current_state(self, game):
         # Implémentation de l'état courant

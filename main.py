@@ -57,6 +57,64 @@ def load_scores(file_name):
     else:
         return [], [], []
 
+def save_scores_ppo(scores, filename):
+    np.savez(filename, scores=scores)
+
+def load_scores_ppo(filename):
+    if os.path.exists(filename):
+        data = np.load(filename)
+        return list(data['scores'])
+    else:
+        return []
+
+def train_ppo():
+    input_size = 11  # Selon votre état
+    hidden_size = 256
+    output_size = 3  # Nombre d'actions possibles
+    agent = PPOAgent(input_size, hidden_size, output_size)
+    game = SnakeGameAI()
+    max_episodes = 100_000
+    
+    agent_model_file = 'ppo_agent.pth'
+    score_file = 'ppo_scores.npz'
+    
+    scores = load_scores_ppo(score_file)
+    best_score = 0
+    
+    if os.path.exists(agent_model_file):
+        agent.load(agent_model_file)
+
+    try:
+        for episode in range(agent.episode, max_episodes):
+            agent.episode = episode
+            game.reset()
+            state = agent.get_state(game) 
+            done = False
+            while not done:
+                action, action_logprob = agent.select_action(state)
+                final_move = [0, 0, 0]
+                final_move[action] = 1
+                reward, done, score = game.play_step(final_move)
+                next_state = agent.get_state(game)
+                _, value = agent.model(torch.FloatTensor(state))
+                agent.store_transition(state, action, reward, next_state, done, action_logprob, value.item())
+                state = next_state
+                if done:
+                    agent.train()
+                    print(f"Épisode: {episode}, Score: {score}, Best Score: {best_score}")
+                    if score > best_score:
+                        best_score = score
+                        agent.save('best_'+agent_model_file)
+
+                    # Sauvegarder l'agent après chaque épisode
+                    agent.save(agent_model_file)
+                    scores.append(score)
+                    save_scores_ppo(scores, score_file)
+    except KeyboardInterrupt:
+        print("Interruption détectée. Sauvegarde de l'agent...")
+        agent.save(agent_model_file)
+        save_scores_ppo(scores, score_file)
+        print("Agent sauvegardé. Fermeture du programme.")
 
 def train(model_type, args = []):
     # scores = []
@@ -146,4 +204,5 @@ def train(model_type, args = []):
         print("Agent sauvegardé. Fermeture du programme.")
     
 if __name__ == '__main__':
-    train('lstm', [100])
+    # train('lstm', [100])
+    train_ppo()
